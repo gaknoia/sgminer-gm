@@ -42,7 +42,7 @@
 #include "algorithm/blakecoin.h"
 #include "algorithm/ethash.h"
 #include "algorithm/cryptonight.h"
-#include "algorithm/equihash.h"
+#include "algorithm/phi.h"
 
 #include "compat.h"
 
@@ -77,7 +77,8 @@ const char *algorithm_type_str[] = {
   "Vanilla",
   "Ethash",
   "Cryptonight",
-  "Equihash"
+  "Equihash",
+  "Phi1612"
 };
 
 void sha256(const unsigned char *message, unsigned int len, unsigned char *digest)
@@ -405,6 +406,41 @@ static cl_int queue_darkcoin_mod_kernel(struct __clState *clState, struct _dev_b
 
   return status;
 }
+
+static cl_int queue_phi_kernel(struct __clState *clState, struct _dev_blk_ctx *blk, __maybe_unused cl_uint threads)
+{
+  cl_kernel *kernel;
+  unsigned int num;
+  cl_ulong le_target;
+  cl_int status = 0;
+
+  le_target = *(cl_ulong *)(blk->work->device_target + 24);
+  flip80(clState->cldata, blk->work->data);
+  status = clEnqueueWriteBuffer(clState->commandQueue, clState->CLbuffer0, true, 0, 80, clState->cldata, 0, NULL, NULL);
+
+  // skein - search
+  kernel = &clState->kernel;
+  num = 0;
+  CL_SET_ARG(clState->CLbuffer0);
+  CL_SET_ARG(clState->padbuffer8);
+  // jh - search1
+  kernel = clState->extra_kernels;
+  CL_SET_ARG_0(clState->padbuffer8);
+  // cubehash - search2
+  CL_NEXTKERNEL_SET_ARG_0(clState->padbuffer8);
+  // fugue - search3
+  CL_NEXTKERNEL_SET_ARG_0(clState->padbuffer8);
+  // gost - search4
+  CL_NEXTKERNEL_SET_ARG_0(clState->padbuffer8);
+  // echo - search5
+  num = 0;
+  CL_NEXTKERNEL_SET_ARG(clState->padbuffer8);
+  CL_SET_ARG(clState->outputBuffer);
+  CL_SET_ARG(le_target);
+
+  return status;
+}
+
 
 static cl_int queue_bitblock_kernel(struct __clState *clState, struct _dev_blk_ctx *blk, __maybe_unused cl_uint threads)
 {
@@ -1274,6 +1310,8 @@ static algorithm_settings_t algos[] = {
   { "bitblockold", ALGO_X15, "", 1, 1, 1, 0, 0, 0xFF, 0xFFFFULL, 0x0000ffffUL, 10, 4 * 16 * 4194304, 0, bitblock_regenhash, NULL, queue_bitblockold_kernel, gen_hash, append_x13_compiler_options },
 
   { "talkcoin-mod", ALGO_NIST, "", 1, 1, 1, 0, 0, 0xFF, 0xFFFFULL, 0x0000ffffUL, 4, 8 * 16 * 4194304, 0, talkcoin_regenhash, NULL, queue_talkcoin_mod_kernel, gen_hash, append_x11_compiler_options },
+
+  { "phi", ALGO_PHI, "", 1, 1, 1, 0, 0, 0xFF, 0xFFFFULL, 0x0000ffffUL, 5, 8 * 16 * 4194304, 0, phi_regenhash, NULL, NULL, queue_phi_kernel, gen_hash, append_x11_compiler_options },
 
   { "fresh", ALGO_FRESH, "", 1, 256, 256, 0, 0, 0xFF, 0xFFFFULL, 0x0000ffffUL, 4, 4 * 16 * 4194304, 0, fresh_regenhash, NULL, queue_fresh_kernel, gen_hash, NULL },
 
