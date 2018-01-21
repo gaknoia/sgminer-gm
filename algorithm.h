@@ -40,7 +40,6 @@ typedef enum {
   ALGO_ETHASH,
   ALGO_CRYPTONIGHT,
   ALGO_EQUIHASH
-  ALGO_PHI
 } algorithm_type_t;
 
 extern const char *algorithm_type_str[];
@@ -83,25 +82,25 @@ typedef struct _algorithm_t {
 
 typedef struct _algorithm_settings_t
 {
-	const char *name;
-	algorithm_type_t type;
-	const char *kernelfile;
-	double   diff_multiplier1;
-	double   diff_multiplier2;
-	double   share_diff_multiplier;
-	uint32_t xintensity_shift;
-	uint32_t intensity_shift;
-	uint32_t found_idx;
-	unsigned long long   diff_numerator;
-	uint32_t diff1targ;
-	size_t n_extra_kernels;
-	long rw_buffer_size;
-	cl_command_queue_properties cq_properties;
-	void     (*regenhash)(struct work *);
-	void     (*precalc_hash)(struct _dev_blk_ctx *, uint32_t *, uint32_t *);
-	cl_int   (*queue_kernel)(struct __clState *, struct _dev_blk_ctx *, cl_uint);
-	void     (*gen_hash)(const unsigned char *, unsigned int, unsigned char *);
-	void     (*set_compile_options)(build_kernel_data *, struct cgpu_info *, algorithm_t *);
+  const char *name;
+  algorithm_type_t type;
+  const char *kernelfile;
+  double   diff_multiplier1;
+  double   diff_multiplier2;
+  double   share_diff_multiplier;
+  uint32_t xintensity_shift;
+  uint32_t intensity_shift;
+  uint32_t found_idx;
+  unsigned long long   diff_numerator;
+  uint32_t diff1targ;
+  size_t n_extra_kernels;
+  long rw_buffer_size;
+  cl_command_queue_properties cq_properties;
+  void     (*regenhash)(struct work *);
+  void     (*precalc_hash)(struct _dev_blk_ctx *, uint32_t *, uint32_t *);
+  cl_int   (*queue_kernel)(struct __clState *, struct _dev_blk_ctx *, cl_uint);
+  void     (*gen_hash)(const unsigned char *, unsigned int, unsigned char *);
+  void     (*set_compile_options)(build_kernel_data *, struct cgpu_info *, algorithm_t *);
 } algorithm_settings_t;
 
 /* Set default parameters based on name. */
